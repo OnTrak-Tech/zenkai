@@ -1,0 +1,12 @@
+{
+  "name": "zenkai-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "contracts",
+    "circuits",
+    "server",
+    "client"
+  ]
+}
