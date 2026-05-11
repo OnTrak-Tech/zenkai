@@ -1,0 +1,8 @@
+[package]
+name = "trivia"
+type = "bin"
+authors = [""]
+compiler_version = ">=0.33.0"
+
+[dependencies]
+timing = { path = "../timing" }
