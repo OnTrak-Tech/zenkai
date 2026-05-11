@@ -1,7 +1,6 @@
-[package]
-name = "zenkai"
-type = "lib"
-authors = [""]
-compiler_version = ">=0.30.0"
-
-[dependencies]
+[workspace]
+members = [
+    "timing",
+    "chess",
+    "trivia"
+]
