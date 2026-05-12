@@ -11,6 +11,10 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+    res.send({ status: 'Zenkai Game Server', message: 'Server is running.' });
+});
+
 app.get('/health', (req, res) => {
     res.send({ status: 'ok' });
 });
