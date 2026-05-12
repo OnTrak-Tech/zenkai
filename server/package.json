@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/server/src/index.js",
     "dev": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,7 +17,8 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "viem": "^2.48.11",
-    "ws": "^8.20.0"
+    "ws": "^8.20.0",
+    "@zenkai/shared": "*"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
