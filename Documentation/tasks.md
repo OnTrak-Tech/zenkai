@@ -6,7 +6,7 @@ Incremental implementation of the Zenkai decentralized Proof of Skill gaming pro
 
 ## Tasks
 
-- [ ] 1. Project scaffolding and shared types
+- [x] 1. Project scaffolding and shared types
   - Initialize monorepo structure: `contracts/`, `circuits/`, `server/`, `client/`
   - Define shared TypeScript types: `GameTranscript`, `MoveRecord`, `ChessMove`, `TriviaAnswer`, `PlayerProfile`, `MatchSummary`, `STAKE_TIERS`
   - Set up Hardhat project in `contracts/` with Celo network config and cUSD ERC-20 mock for tests
@@ -15,12 +15,12 @@ Incremental implementation of the Zenkai decentralized Proof of Skill gaming pro
   - Set up Vite + React + TypeScript project in `client/` with Viem and MiniPay SDK
   - _Requirements: 1.1, 3.1, 4.1, 5.1_
 
-- [ ] 2. Smart contracts
-  - [ ] 2.1 Implement `ZenkaiTreasury.sol`
+- [x] 2. Smart contracts
+  - [x] 2.1 Implement `ZenkaiTreasury.sol`
     - Minimal cUSD fee receiver with owner-only withdrawal
     - _Requirements: 6.4_
 
-  - [ ] 2.2 Implement `ZenkaiEscrow.sol` — state machine and escrow logic
+  - [x] 2.2 Implement `ZenkaiEscrow.sol` — state machine and escrow logic
     - Define `Match` struct, `MatchState` enum, and storage mapping
     - Implement `createMatch`, `depositStake` with OPEN → LOCKED transition
     - Derive `seed` from `blockhash` at escrow time and emit `MatchLocked` event
@@ -34,7 +34,7 @@ Incremental implementation of the Zenkai decentralized Proof of Skill gaming pro
     - Emit `MatchSettled` and `DisputeOpened` events
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 7.1, 7.3, 7.4, 7.5, 11.2, 11.3, 11.4, 11.5_
 
-  - [ ]* 2.3 Write unit tests for `ZenkaiEscrow.sol`
+  - [x] 2.3 Write unit tests for `ZenkaiEscrow.sol`
     - Test full happy-path: createMatch → depositStake → settleMatch → payout amounts
     - Test draw settlement 50/50 split
     - Test reentrancy guard rejection
@@ -43,55 +43,55 @@ Incremental implementation of the Zenkai decentralized Proof of Skill gaming pro
     - Test 48-hour timelock enforcement
     - _Requirements: 3.5, 6.3, 6.4, 6.7, 7.1, 7.4, 11.2, 11.3, 11.5_
 
-  - [ ] 2.4 Implement `ZenkaiVerifier.sol`
+  - [x] 2.4 Implement `ZenkaiVerifier.sol`
     - Wrap Groth16 verifier stub (to be replaced by Noir-generated verifier)
     - Implement `verifyAndSettle`: on success call `escrow.settleMatch`, on failure call `escrow.openDisputeWindow`
     - _Requirements: 6.1, 6.2, 6.6_
 
-  - [ ]* 2.5 Write property test for escrow payout invariant
+  - [x] 2.5 Write property test for escrow payout invariant
     - **Property 1: Payout conservation** — for any settled match, `winner_payout + treasury_fee == 2 * stakeAmount` (no funds created or destroyed)
-    - **Validates: Requirements 6.3, 6.4, 6.5**
+    - **Validates: Requirements 6.3, 6.4, 6.5_
 
-  - [ ]* 2.6 Write property test for draw settlement invariant
+  - [x] 2.6 Write property test for draw settlement invariant
     - **Property 2: Draw split symmetry** — for any draw settlement, `p1_payout == p2_payout` and `p1_payout + p2_payout + treasury_fee == 2 * stakeAmount`
     - **Validates: Requirements 6.7, 8.5, 9.6**
 
 - [ ] 3. Checkpoint — smart contract tests pass
   - Ensure all Hardhat tests pass. Ask the user if questions arise.
 
-- [ ] 4. ZK circuits (Noir)
-  - [ ] 4.1 Implement shared Human Timing Floor module (`timing.nr`)
+- [x] 4. ZK circuits (Noir)
+  - [x] 4.1 Implement shared Human Timing Floor module (`timing.nr`)
     - Constraint: all inter-move intervals in the transcript ≥ 300ms
     - _Requirements: 4.4, 5.3, 10.5_
 
-  - [ ]* 4.2 Write property test for Human Timing Floor
+  - [x] 4.2 Write property test for Human Timing Floor
     - **Property 3: HTF rejection** — any transcript containing at least one inter-move interval < 300ms must fail circuit constraint
     - **Validates: Requirements 5.3, 10.5**
 
-  - [ ] 4.3 Implement Chess circuit (`chess.nr`)
+  - [x] 4.3 Implement Chess circuit (`chess.nr`)
     - Inputs: `game_id`, `seed`, `moves[]`, `winner`
     - Constraints: FIDE move legality (castling, en passant, promotion), HTF, terminal state matches declared winner, White/Black assignment from seed
     - _Requirements: 5.2, 5.3, 5.4, 8.1, 8.4, 8.6_
 
-  - [ ]* 4.4 Write property test for Chess circuit round-trip
+  - [x] 4.4 Write property test for Chess circuit round-trip
     - **Property 4: Chess transcript round-trip** — serializing then deserializing a valid Chess `GameTranscript` produces an equivalent transcript
     - **Validates: Requirements 10.3**
 
-  - [ ] 4.5 Implement Trivia circuit (`trivia.nr`)
+  - [x] 4.5 Implement Trivia circuit (`trivia.nr`)
     - Inputs: `game_id`, `seed`, `answers[]`, `score_p1`, `score_p2`
     - Constraints: question indices derived from seed, HTF, declared scores match transcript, unanswered questions counted as incorrect
     - _Requirements: 5.2, 5.3, 5.4, 9.1, 9.2, 9.3, 9.4, 9.5_
 
-  - [ ]* 4.6 Write property test for Trivia circuit confluence
+  - [x] 4.6 Write property test for Trivia circuit confluence
     - **Property 5: Trivia confluence** — the circuit produces the same proof output for identical `GameTranscript` inputs regardless of move receipt order
     - **Validates: Requirements 10.4**
 
-  - [ ] 4.7 Compile circuits to WASM via `nargo` + `bb.js`
+  - [x] 4.7 Compile circuits to WASM via `nargo` + `bb.js`
     - Output `chess.wasm`, `trivia.wasm`, and Groth16 verifier Solidity for `ZenkaiVerifier.sol`
     - Replace verifier stub in `ZenkaiVerifier.sol` with generated verifier
     - _Requirements: 5.1, 5.6_
 
-  - [ ]* 4.8 Write unit tests for circuit serialization
+  - [x] 4.8 Write unit tests for circuit serialization
     - Test `GameTranscript` → circuit input serialization and deserialization
     - Test rejection of transcripts with HTF violations before proof generation
     - _Requirements: 10.1, 10.2, 10.5_
@@ -114,15 +114,15 @@ Incremental implementation of the Zenkai decentralized Proof of Skill gaming pro
     - Test retry logic on transient failure
     - _Requirements: 5.5, 5.7, 10.5_
 
-- [ ] 7. Off-chain services
-  - [ ] 7.1 Implement Matchmaker service (`server/matchmaker.ts`)
+- [x] 7. Off-chain services
+  - [x] 7.1 Implement Matchmaker service (`server/matchmaker.ts`)
     - `POST /queue` — enqueue player by `{ address, gameType, stakeTier }`; return `{ queueId }`
     - `GET /queue/:id` — return `{ status: "waiting" | "matched" | "timeout", matchId? }`
     - FIFO pairing per `(gameType, stakeTier)` bucket; 60-second timeout returns `{ status: "timeout" }`
     - Prevent duplicate queue entries for the same address
     - _Requirements: 2.1, 2.2, 2.3, 2.5_
 
-  - [ ]* 7.2 Write unit tests for Matchmaker pairing logic
+  - [x] 7.2 Write unit tests for Matchmaker pairing logic
     - Test two players in same bucket are paired
     - Test players in different buckets are not paired
     - Test 60-second timeout cancels request
