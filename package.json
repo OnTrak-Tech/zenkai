@@ -13,6 +13,8 @@
     "deploy": "node scripts/deploy-all.js",
     "deploy:testnet": "node scripts/deploy-all.js alfajores",
     "deploy:mainnet": "node scripts/deploy-all.js celo",
-    "update-contracts": "node scripts/update-contracts.js"
+    "update-contracts": "node scripts/update-contracts.js",
+    "build": "npm run build --workspace=server",
+    "start": "npm start --workspace=server"
   }
 }
