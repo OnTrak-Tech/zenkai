@@ -8,5 +8,11 @@
     "circuits",
     "server",
     "client"
-  ]
+  ],
+  "scripts": {
+    "deploy": "node scripts/deploy-all.js",
+    "deploy:testnet": "node scripts/deploy-all.js alfajores",
+    "deploy:mainnet": "node scripts/deploy-all.js celo",
+    "update-contracts": "node scripts/update-contracts.js"
+  }
 }
