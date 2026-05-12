@@ -17,7 +17,7 @@ export const CONTRACT_ADDRESSES = {
 // Environment configuration
 export const CONFIG = {
   // Use 'alfajores' for testnet, 'celo' for mainnet
-  network: process.env.VITE_NETWORK || 'alfajores',
-  serverUrl: process.env.VITE_SERVER_URL || 'http://localhost:3001',
-  walletConnectProjectId: process.env.VITE_WALLETCONNECT_PROJECT_ID || '',
+  network: (import.meta.env.VITE_NETWORK || 'alfajores') as 'alfajores' | 'celo',
+  serverUrl: import.meta.env.VITE_SERVER_URL || 'http://localhost:3001',
+  walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '',
 };
