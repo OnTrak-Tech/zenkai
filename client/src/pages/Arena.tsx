@@ -59,7 +59,7 @@ const Arena: React.FC = () => {
   };
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
 
     if (matchStatus === 'waiting' && queueId) {
       interval = setInterval(async () => {
