@@ -1,176 +1,141 @@
-import React, { useState, useEffect } from 'react';
-import { useWallet } from '../context/WalletContext';
-import { CONFIG } from '../config';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const GRID_SIZE = 9;
+
 const Arena: React.FC = () => {
-  const { address, isConnected, connect } = useWallet();
   const navigate = useNavigate();
-  
-  const [isQueueing, setIsQueueing] = useState(false);
-  const [queueId, setQueueId] = useState<string | null>(null);
-  const [matchStatus, setMatchStatus] = useState<'idle' | 'waiting' | 'matched' | 'error' | 'timeout'>('idle');
-  const [matchData, setMatchData] = useState<any>(null);
+  const [selectedCell, setSelectedCell] = useState<number | null>(null);
+  const [isEncrypting, setIsEncrypting] = useState(false);
+  const [matchOver, setMatchOver] = useState(false);
 
-  const startMatchmaking = async (tier: string) => {
-    if (!isConnected) {
-      await connect();
-      return;
-    }
+  const handleConfirmMove = () => {
+    if (selectedCell === null) return;
+    setIsEncrypting(true);
 
-    try {
-      setIsQueueing(true);
-      setMatchStatus('waiting');
-      
-      const response = await fetch(`${CONFIG.serverUrl}/api/queue`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address,
-          gameType: 'Chess', // Defaulting to Chess for now
-          stakeTier: tier
-        })
-      });
-
-      const data = await response.json();
-      if (data.queueId) {
-        setQueueId(data.queueId);
-        if (data.status === 'matched') {
-          handleMatched(data);
-        }
-      } else {
-        throw new Error(data.error || "Failed to join queue");
-      }
-    } catch (error) {
-      console.error("Matchmaking error:", error);
-      setMatchStatus('error');
-      setIsQueueing(false);
-    }
-  };
-
-  const handleMatched = (data: any) => {
-    setMatchStatus('matched');
-    setMatchData(data);
-    setIsQueueing(false);
-    // In a real app, we would now transition to the Game screen
+    // Simulate ZK-Proof generation and settlement
     setTimeout(() => {
-      navigate(`/game/${data.matchId}`);
-    }, 2000);
+      setIsEncrypting(false);
+      setMatchOver(true);
+    }, 4000);
   };
 
-  useEffect(() => {
-    let interval: any;
-
-    if (matchStatus === 'waiting' && queueId) {
-      interval = setInterval(async () => {
-        try {
-          const response = await fetch(`${CONFIG.serverUrl}/api/queue/${queueId}`);
-          const data = await response.json();
-
-          if (data.status === 'matched') {
-            handleMatched(data);
-            clearInterval(interval);
-          } else if (data.status === 'timeout') {
-            setMatchStatus('timeout');
-            setIsQueueing(false);
-            clearInterval(interval);
-          }
-        } catch (error) {
-          console.error("Polling error:", error);
-        }
-      }, 3000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [matchStatus, queueId]);
+  const handleRematch = () => {
+    navigate('/lobby');
+  };
 
   return (
-    <div className="space-y-8 pb-10">
-      <header className="text-center space-y-2">
-        <h2 className="font-headline text-3xl font-black text-on-surface uppercase tracking-tight">Matchmaking Arena</h2>
-        <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest">Select your stakes and enter the grid</p>
-      </header>
+    <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden relative">
+      
+      {/* ZK Proof Overlay */}
+      {isEncrypting && (
+        <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-xs space-y-6">
+            <h2 className="text-center font-display font-black text-2xl text-primary uppercase tracking-widest animate-pulse">
+              ENCRYPTING MOVE
+            </h2>
+            <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+               <div className="h-full bg-primary animate-[loading_4s_ease-in-out_forwards]"></div>
+            </div>
+            <p className="text-center font-label text-xs text-on-surface-variant uppercase tracking-widest">
+              Generating Noir ZK-Proof...
+            </p>
+          </div>
+        </div>
+      )}
 
-      {/* Matchmaking Overlay */}
-      {isQueueing && (
-        <div className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-24 h-24 border-4 border-primary border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_30px_rgba(255,45,120,0.4)]"></div>
-          <h3 className="text-3xl font-display font-black text-on-surface uppercase tracking-tighter mb-2">Finding Opponent</h3>
-          <p className="text-on-surface-variant font-label text-xs uppercase tracking-widest animate-pulse">Scanning the Grid...</p>
+      {/* Match Over Overlay */}
+      {matchOver && (
+        <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center p-6">
+          <h2 className="text-6xl font-display font-black text-secondary uppercase tracking-tighter mb-4 drop-shadow-[0_0_20px_rgba(45,255,180,0.8)]">
+            VICTORY
+          </h2>
+          <div className="text-3xl font-headline font-bold text-secondary mb-12 animate-bounce">
+            +5.00 cUSD
+          </div>
           <button 
-            onClick={() => { setIsQueueing(false); setMatchStatus('idle'); setQueueId(null); }}
-            className="mt-12 text-error font-label text-[10px] uppercase tracking-widest hover:underline"
+            onClick={handleRematch}
+            className="w-full max-w-xs py-4 bg-primary text-on-primary font-display font-bold text-xl uppercase tracking-widest rounded-xl hover:scale-105 transition-transform"
           >
-            Cancel Search
+            PLAY AGAIN
           </button>
         </div>
       )}
 
-      {matchStatus === 'matched' && (
-        <div className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(0,255,204,0.6)]">
-            <span className="material-symbols-outlined text-on-secondary text-5xl">check_circle</span>
+      {/* Opponent Profile (Top) */}
+      <div className="p-4 border-b border-error/30 bg-surface-container-low flex justify-between items-center shadow-[0_4px_15px_rgba(255,45,45,0.1)]">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full border-2 border-error overflow-hidden p-0.5">
+             <div className="w-full h-full bg-error/20 rounded-full flex items-center justify-center">
+               <span className="material-symbols-outlined text-error">smart_toy</span>
+             </div>
           </div>
-          <h3 className="text-3xl font-display font-black text-secondary uppercase tracking-tighter mb-2">Match Found!</h3>
-          <p className="text-on-surface-variant font-label text-xs uppercase tracking-widest">Initializing Game Session...</p>
+          <div>
+            <h3 className="font-headline font-bold text-error uppercase">Unknown_0x4F</h3>
+            <div className="flex gap-1 mt-1">
+               <span className="w-4 h-1 bg-error rounded-full"></span>
+               <span className="w-4 h-1 bg-error rounded-full"></span>
+               <span className="w-4 h-1 bg-error rounded-full opacity-30"></span>
+            </div>
+          </div>
         </div>
-      )}
+        <div className="font-display font-black text-2xl text-on-surface/50">VS</div>
+      </div>
 
-      {/* Stake Tiers */}
-      <section className="grid grid-cols-1 gap-6">
-        {[
-          { title: 'Practice', stake: 'Free', reward: 'XP Only', color: 'border-outline', icon: 'school' },
-          { title: 'Standard', stake: '1.00 cUSD', reward: '1.90 cUSD', color: 'border-secondary/30 shadow-[0_0_15px_rgba(0,255,204,0.1)]', icon: 'payments', active: true },
-          { title: 'Pro', stake: '10.00 cUSD', reward: '19.00 cUSD', color: 'border-primary/30 shadow-[0_0_15px_rgba(255,45,120,0.1)]', icon: 'military_tech' },
-          { title: 'Elite', stake: '50.00 cUSD', reward: '95.00 cUSD', color: 'border-tertiary/30 shadow-[0_0_15px_rgba(255,224,74,0.1)]', icon: 'diamond' }
-        ].map((tier, i) => (
-          <div key={i} className={`surface-container rounded-2xl p-6 border ${tier.color} relative group bg-surface-container overflow-hidden`}>
-            {tier.active && <div className="absolute top-0 right-0 bg-secondary text-on-secondary font-label text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase">Popular</div>}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center border border-outline-variant/30">
-                  <span className="material-symbols-outlined text-on-surface">{tier.icon}</span>
-                </div>
-                <div>
-                  <h4 className="font-headline font-bold text-xl text-on-surface uppercase">{tier.title}</h4>
-                  <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Stake: {tier.stake}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-label text-[10px] text-on-surface-variant uppercase mb-1">Potential Win</p>
-                <p className="font-headline font-bold text-secondary text-lg">{tier.reward}</p>
+      {/* Game Grid (Center) */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm aspect-square grid grid-cols-3 gap-2 p-2 bg-surface-container-high rounded-xl border border-outline-variant/50 shadow-2xl">
+          {Array.from({ length: GRID_SIZE }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedCell(i)}
+              className={`rounded-lg transition-all duration-200 border-2 ${
+                selectedCell === i 
+                  ? 'bg-secondary/20 border-secondary shadow-[inset_0_0_20px_rgba(45,255,180,0.5)]' 
+                  : 'bg-surface border-outline-variant hover:border-secondary/50'
+              }`}
+            >
+               {selectedCell === i && (
+                 <span className="material-symbols-outlined text-secondary text-4xl animate-pulse">
+                   location_searching
+                 </span>
+               )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Player Profile & Action (Bottom) */}
+      <div className="p-4 border-t border-primary/30 bg-surface-container-low shadow-[0_-4px_15px_rgba(255,45,120,0.1)]">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full border-2 border-primary overflow-hidden p-0.5">
+               <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtkMRYmvUhF-_eQDx7pqC8gCuVHQ9k6m5l7AFYdNz22vmcDukgs7xCpY6uAPn1RyACbCK9C1J0KqGouQUBF5gG6ym_lxAdfK29fIV_h0MEzZSduUxAHCX8nn5LY8-I7P5JZBPSQXA7oJPDfkciTIr1dc9C3itA6RJwV_90KPHBaVpHJj3ZPDc2EBXLK0p9mk1ziNQsxACTiZznFiaURRibsU6DFJ_tPZa2l0u7j3WhvW-4T4DK07Cc6G2Gmm8qzc7pEACkMlrzbt6G" alt="Player" className="w-full h-full object-cover rounded-full" />
+            </div>
+            <div>
+              <h3 className="font-headline font-bold text-primary uppercase">YOU</h3>
+              <div className="flex gap-1 mt-1">
+                 <span className="w-4 h-1 bg-primary rounded-full"></span>
+                 <span className="w-4 h-1 bg-primary rounded-full"></span>
+                 <span className="w-4 h-1 bg-primary rounded-full"></span>
               </div>
             </div>
-            <button 
-              disabled={isQueueing}
-              onClick={() => startMatchmaking(tier.title)}
-              className={`w-full py-3 rounded-lg font-headline font-bold uppercase tracking-widest transition-all ${tier.active ? 'bg-secondary text-on-secondary hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(0,255,204,0.3)]' : 'bg-surface-variant text-on-surface-variant hover:bg-outline-variant'}`}
-            >
-              Select Tier
-            </button>
           </div>
-        ))}
-      </section>
+        </div>
+        
+        <button 
+          onClick={handleConfirmMove}
+          disabled={selectedCell === null || isEncrypting}
+          className={`w-full py-4 font-display font-bold text-xl uppercase tracking-widest rounded-xl transition-all ${
+            selectedCell !== null
+              ? 'bg-primary text-on-primary hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(255,45,120,0.4)]'
+              : 'bg-surface-variant text-on-surface-variant opacity-50 cursor-not-allowed'
+          }`}
+        >
+          {selectedCell !== null ? 'CONFIRM MOVE' : 'SELECT TILE'}
+        </button>
+      </div>
 
-      {/* Arena Stats */}
-      <section className="surface-container-low rounded-xl p-4 border border-outline-variant/20 flex justify-around items-center bg-surface-container-low">
-        <div className="text-center">
-          <p className="font-headline font-bold text-on-surface">1,248</p>
-          <p className="font-label text-[10px] text-on-surface-variant uppercase">Players Online</p>
-        </div>
-        <div className="w-[1px] h-8 bg-outline-variant/30"></div>
-        <div className="text-center">
-          <p className="font-headline font-bold text-primary">12ms</p>
-          <p className="font-label text-[10px] text-on-surface-variant uppercase">Network Latency</p>
-        </div>
-        <div className="w-[1px] h-8 bg-outline-variant/30"></div>
-        <div className="text-center">
-          <p className="font-headline font-bold text-secondary">98%</p>
-          <p className="font-label text-[10px] text-on-surface-variant uppercase">Match Success</p>
-        </div>
-      </section>
     </div>
   );
 };
