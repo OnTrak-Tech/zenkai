@@ -1,7 +1,6 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import TopAppBar from './TopAppBar';
-import BottomNavBar from './BottomNavBar';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -13,7 +12,6 @@ const Layout: React.FC = () => {
       <main className={!isHomePage ? "px-6 pt-6 space-y-8 relative overflow-hidden" : ""}>
         <Outlet />
       </main>
-      {!isHomePage && <BottomNavBar />}
     </div>
   );
 };
