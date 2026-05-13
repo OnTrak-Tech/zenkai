@@ -10,7 +10,7 @@ async function main() {
     console.log("Network: Celo Mainnet");
   } else {
     // Celo Sepolia cUSD Address (Fallback for testnets)
-    CUSD_ADDRESS = "0x954cBA141f21760751E3065ACC250c38fb9f5e61";
+    CUSD_ADDRESS = "0x90BC8DC6fd3e52517D2B07bF59f3ccbbcAfC5b23";
     console.log("Network: Celo Sepolia Testnet");
   }
 
