@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { 
   createPublicClient, 
   createWalletClient, 
@@ -6,7 +6,7 @@ import {
   http, 
   parseAbi, 
   formatEther,
-  Address
+  type Address
 } from 'viem';
 import { celo, celoAlfajores } from 'viem/chains';
 import { CONFIG, CONTRACT_ADDRESSES } from '../config';
@@ -23,10 +23,15 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const CUSD_ABI = parseAbi([
-  'function balanceOf(address account) external view returns (uint256)',
-  'function decimals() external view returns (uint8)'
-]);
+const CUSD_ABI = [
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ type: 'address', name: 'account' }],
+    outputs: [{ type: 'uint256' }],
+  },
+] as const;
 
 export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState<Address | null>(null);
@@ -60,8 +65,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         abi: CUSD_ABI,
         functionName: 'balanceOf',
         args: [address]
-      });
-      setBalance(Number(formatEther(balanceData)).toFixed(2));
+      } as any);
+      setBalance(Number(formatEther(balanceData as bigint)).toFixed(2));
     } catch (error) {
       console.error("Error refreshing balance:", error);
     }
@@ -103,7 +108,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       to,
       data,
       value
-    });
+    } as any);
   };
 
   useEffect(() => {
