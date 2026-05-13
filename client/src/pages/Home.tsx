@@ -45,18 +45,6 @@ const Home: React.FC = () => {
           </span>
         </button>
       </main>
-
-      {/* Bottom Nav */}
-      <nav className="relative z-10 w-full p-6 pb-8 flex justify-center gap-8 border-t border-outline-variant/30 bg-surface/80 backdrop-blur-md">
-        {['Leaderboard', 'History', 'Docs'].map((link) => (
-          <button key={link} className="flex flex-col items-center gap-1 text-on-surface-variant hover:text-secondary transition-colors">
-             <span className="material-symbols-outlined text-xl">
-               {link === 'Leaderboard' ? 'emoji_events' : link === 'History' ? 'history' : 'description'}
-             </span>
-             <span className="font-label text-[8px] uppercase tracking-widest">{link}</span>
-          </button>
-        ))}
-      </nav>
     </div>
   );
 };
