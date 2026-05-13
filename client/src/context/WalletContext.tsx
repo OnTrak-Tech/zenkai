@@ -80,17 +80,18 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
 
     try {
-      const walletClient = createWalletClient({
-        chain,
-        transport: custom(provider)
-      });
-
-      const [account] = await walletClient.requestAddresses();
-      setAddress(account);
-      setIsConnected(true);
-      checkMiniPay();
+      console.log("Connecting to wallet...");
+      // Use raw provider request for maximum compatibility
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
+      if (accounts && accounts.length > 0) {
+        setAddress(accounts[0]);
+        setIsConnected(true);
+        checkMiniPay();
+        console.log("Connected to:", accounts[0]);
+      }
     } catch (error) {
       console.error("Connection failed:", error);
+      alert("Failed to connect wallet. See console for details.");
     }
   };
 
@@ -117,14 +118,12 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       if (provider) {
         checkMiniPay();
         try {
-          const walletClient = createWalletClient({
-            chain,
-            transport: custom(provider)
-          });
-          const accounts = await walletClient.getAddresses();
-          if (accounts.length > 0) {
+          // Check if already connected without prompting
+          const accounts = await provider.request({ method: 'eth_accounts' });
+          if (accounts && accounts.length > 0) {
             setAddress(accounts[0]);
             setIsConnected(true);
+            console.log("Auto-connected to:", accounts[0]);
           }
         } catch (e) {
           console.warn("Auto-connect failed", e);
