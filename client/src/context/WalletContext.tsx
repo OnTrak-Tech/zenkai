@@ -81,7 +81,39 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     try {
       console.log("Connecting to wallet...");
-      // Use raw provider request for maximum compatibility
+      
+      const chainIdHex = `0x${chain.id.toString(16)}`;
+      
+      // Step 1: Ensure wallet is on the right chain
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainIdHex }],
+        });
+      } catch (switchError: any) {
+        // If the chain is not set up in the wallet (e.g. Sepolia on MiniPay/MetaMask)
+        if (switchError.code === 4902 || switchError?.message?.includes('not set up') || switchError?.message?.includes('Unrecognized')) {
+          console.log("Chain not found in wallet, attempting to add it...");
+          try {
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: chainIdHex,
+                  chainName: chain.name,
+                  nativeCurrency: chain.nativeCurrency,
+                  rpcUrls: [...chain.rpcUrls.default.http],
+                  blockExplorerUrls: chain.blockExplorers ? [chain.blockExplorers.default.url] : [],
+                },
+              ],
+            });
+          } catch (addError) {
+            console.error("Failed to add chain to wallet:", addError);
+          }
+        }
+      }
+
+      // Step 2: Request accounts
       const accounts = await provider.request({ method: 'eth_requestAccounts' });
       if (accounts && accounts.length > 0) {
         setAddress(accounts[0]);
