@@ -1,10 +1,18 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 
 async function main() {
   console.log("Starting Zenkai Protocol Deployment...");
 
-  // Alfajores cUSD Address (Mock for local/testnet)
-  const CUSD_ADDRESS = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
+  let CUSD_ADDRESS: string;
+  if (network.name === "celo") {
+    // Celo Mainnet cUSD Address
+    CUSD_ADDRESS = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
+    console.log("Network: Celo Mainnet");
+  } else {
+    // Celo Sepolia cUSD Address (Fallback for testnets)
+    CUSD_ADDRESS = "0x954cBA141f21760751E3065ACC250c38fb9f5e61";
+    console.log("Network: Celo Sepolia Testnet");
+  }
 
   // 1. Deploy Verifier
   console.log("Deploying ZenkaiVerifier...");
@@ -45,7 +53,7 @@ async function main() {
   console.log("Verifier linked successfully.");
 
   console.log("\n--- Deployment Summary ---");
-  console.log(`cUSD (Alfajores): ${CUSD_ADDRESS}`);
+  console.log(`cUSD (${network.name}): ${CUSD_ADDRESS}`);
   console.log(`Verifier:        ${verifierAddress}`);
   console.log(`Treasury:        ${treasuryAddress}`);
   console.log(`Escrow:          ${escrowAddress}`);

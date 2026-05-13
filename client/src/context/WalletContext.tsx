@@ -8,7 +8,7 @@ import {
   formatEther,
   type Address
 } from 'viem';
-import { celo, celoAlfajores } from 'viem/chains';
+import { celo, celoSepolia } from 'viem/chains';
 import { CONFIG, CONTRACT_ADDRESSES } from '../config';
 
 interface WalletContextType {
@@ -39,7 +39,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isMiniPay, setIsMiniPay] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
-  const chain = CONFIG.network === 'celo' ? celo : celoAlfajores;
+  const chain = CONFIG.network === 'celo' ? celo : celoSepolia;
   const cUSDAddress = CONTRACT_ADDRESSES[CONFIG.network].cUSD as Address;
 
   const publicClient = createPublicClient({
