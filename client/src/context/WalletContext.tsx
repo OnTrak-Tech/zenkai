@@ -19,6 +19,7 @@ interface WalletContextType {
   connect: () => Promise<void>;
   signTransaction: (to: Address, data: `0x${string}`, value?: bigint) => Promise<`0x${string}`>;
   refreshBalance: () => Promise<void>;
+  disconnect: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -127,6 +128,13 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
+  const disconnect = async () => {
+    setAddress(null);
+    setIsConnected(false);
+    setBalance("0.00");
+    console.log("Disconnected wallet.");
+  };
+
   const signTransaction = async (to: Address, data: `0x${string}`, value: bigint = 0n) => {
     const provider = (window as any).ethereum;
     if (!provider || !address) throw new Error("Wallet not connected");
@@ -182,7 +190,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       isMiniPay, 
       connect, 
       signTransaction,
-      refreshBalance 
+      refreshBalance,
+      disconnect
     }}>
       {children}
     </WalletContext.Provider>

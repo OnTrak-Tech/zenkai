@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Arena from './pages/Arena';
 import Lobby from './pages/Lobby';
+import Profile from './pages/Profile';
 import { useWallet } from './context/WalletContext';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/lobby" element={<Lobby />} />
           <Route path="/arena" element={<Arena />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
