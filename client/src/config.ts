@@ -1,7 +1,7 @@
 // Contract addresses - Update these after deployment
 export const CONTRACT_ADDRESSES = {
   celoSepolia: {
-    cUSD: "0x954cBA141f21760751E3065ACC250c38fb9f5e61",
+    cUSD: "0x90BC8DC6fd3e52517D2B07bF59f3ccbbcAfC5b23",
     escrow: "0x1B0c52BaF90c57b8604D08EbA9CB36e3db25E4DD",
     verifier: "0xac732F3cdc457af934Dd03D04132119c0505fAe3",
     treasury: "0x43D0056A8f1C6a1Dcf3e48f7A8b486F3D00eae83",

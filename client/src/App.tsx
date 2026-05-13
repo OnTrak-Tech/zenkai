@@ -4,13 +4,18 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Arena from './pages/Arena';
 import Ranks from './pages/Ranks';
+import Lobby from './pages/Lobby';
+import { useWallet } from './context/WalletContext';
 
 function App() {
+  const { isConnected } = useWallet();
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={isConnected ? <Navigate to="/lobby" replace /> : <Home />} />
         <Route element={<Layout />}>
+          <Route path="/lobby" element={<Lobby />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/arena" element={<Arena />} />
           <Route path="/ranks" element={<Ranks />} />
