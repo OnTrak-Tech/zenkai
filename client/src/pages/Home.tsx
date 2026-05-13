@@ -1,6 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useWallet } from '../context/WalletContext';
 
 const Home: React.FC = () => {
+  const { connect, isConnected, address } = useWallet();
+
   return (
     <div className="bg-background text-on-background font-body overflow-x-hidden">
       {/* TopNavBar for Landing Page */}
@@ -9,14 +13,17 @@ const Home: React.FC = () => {
           <div className="flex items-center gap-8">
             <span className="text-2xl font-display font-black text-primary drop-shadow-[0_0_8px_rgba(255,45,120,0.6)] uppercase tracking-widest">ZENKAI</span>
             <div className="hidden md:flex items-center gap-6">
-              <a className="text-on-surface-variant font-label hover:text-secondary transition-colors uppercase tracking-widest" href="#arena">Arena</a>
-              <a className="text-on-surface-variant font-label hover:text-secondary transition-colors uppercase tracking-widest" href="#ranks">Ranks</a>
+              <Link className="text-on-surface-variant font-label hover:text-secondary transition-colors uppercase tracking-widest" to="/arena">Arena</Link>
+              <Link className="text-on-surface-variant font-label hover:text-secondary transition-colors uppercase tracking-widest" to="/ranks">Ranks</Link>
               <a className="text-on-surface-variant font-label hover:text-secondary transition-colors uppercase tracking-widest" href="#">Docs</a>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="active:scale-95 transition-transform duration-200 font-label border border-primary text-primary px-6 py-2 uppercase tracking-tighter hover:bg-primary/10 neon-border-glow">
-              Connect Wallet
+            <button 
+              onClick={connect}
+              className="active:scale-95 transition-transform duration-200 font-label border border-primary text-primary px-6 py-2 uppercase tracking-tighter hover:bg-primary/10 neon-border-glow"
+            >
+              {isConnected && address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect Wallet'}
             </button>
             <span className="material-symbols-outlined text-primary">account_balance_wallet</span>
           </div>
@@ -38,10 +45,10 @@ const Home: React.FC = () => {
             Provably fair, high-stakes 1v1 matches. Zero-knowledge anti-cheat verified on Celo.
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-            <button className="group relative px-10 py-4 bg-primary text-on-primary font-display font-bold uppercase tracking-widest overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,45,120,0.5)]">
+            <Link to="/arena" className="group relative px-10 py-4 bg-primary text-on-primary font-display font-bold uppercase tracking-widest overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,45,120,0.5)] flex items-center justify-center">
               <span className="relative z-10">Enter the Grid</span>
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
-            </button>
+            </Link>
             <button className="px-10 py-4 border border-outline text-on-surface font-display font-bold uppercase tracking-widest hover:border-secondary hover:text-secondary transition-all">
               Read Whitepaper
             </button>
