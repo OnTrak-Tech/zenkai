@@ -5,9 +5,9 @@ const TopAppBar: React.FC = () => {
   const { balance, isConnected, address } = useWallet();
 
   return (
-    <header className="bg-background/80 backdrop-blur-md sticky top-0 z-[60] border-b border-outline-variant/30 shadow-[inset_0_0_12px_rgba(255,45,120,0.1)] flex justify-between items-center px-6 py-4 w-full">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/40 p-0.5">
+    <header className="bg-background/90 backdrop-blur-md sticky top-0 z-[60] border-b border-outline-variant/30 flex justify-between items-center px-4 py-2 w-full">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/40 p-0.5">
           <img 
             alt="Profile" 
             className="w-full h-full object-cover rounded" 
@@ -15,21 +15,21 @@ const TopAppBar: React.FC = () => {
           />
         </div>
         <div>
-          <h1 className="font-headline font-black text-2xl text-primary uppercase tracking-tighter drop-shadow-[0_0_8px_rgba(255,45,120,0.8)] leading-none">ZENKAI</h1>
+          <h1 className="font-headline font-black text-xl text-primary uppercase tracking-tighter leading-none drop-shadow-[0_0_5px_rgba(255,45,120,0.8)]">ZENKAI</h1>
           {isConnected && address && (
-            <p className="font-label text-[8px] text-on-surface-variant uppercase tracking-widest mt-1">
-              {address.slice(0, 6)}...{address.slice(-4)}
+            <p className="font-label text-[8px] text-on-surface-variant uppercase tracking-widest">
+              {address.slice(0, 4)}...{address.slice(-4)}
             </p>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex flex-col items-end">
-          <span className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Balance</span>
-          <span className="font-headline font-bold text-secondary flex items-center gap-1 neon-glow-text">
-            <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
+      <div className="flex items-center">
+        <div className="bg-surface-container-high px-3 py-1 rounded-full border border-secondary/30 flex items-center gap-2 shadow-[0_0_10px_rgba(45,255,180,0.15)]">
+          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+          <span className="font-headline font-bold text-secondary text-sm neon-cyan-glow">
             {isConnected ? balance : '---'}
           </span>
+          <span className="font-label text-[8px] text-secondary/70 uppercase tracking-widest">cUSD</span>
         </div>
       </div>
     </header>
