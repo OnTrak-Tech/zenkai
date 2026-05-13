@@ -39,21 +39,37 @@ const Lobby: React.FC = () => {
       </div>
 
       {/* Wager Selection */}
-      <div className="flex gap-4 w-full max-w-sm mb-16">
+      <div className="flex gap-4 w-full max-w-sm mb-4">
         {WAGER_OPTIONS.map((amount) => (
           <button
             key={amount}
             onClick={() => setSelectedWager(amount)}
-            className={`flex-1 py-6 rounded-xl border-2 transition-all duration-200 font-display font-bold text-2xl flex flex-col items-center justify-center gap-1 ${
+            className={`flex-1 py-4 rounded-xl border-2 transition-all duration-200 font-display font-bold text-xl flex flex-col items-center justify-center gap-1 ${
               selectedWager === amount
                 ? 'bg-primary/20 border-primary text-primary neon-border-glow scale-105'
                 : 'bg-surface-container border-outline-variant text-on-surface-variant hover:border-primary/50'
             }`}
           >
             <span>{amount}</span>
-            <span className="text-[10px] font-label uppercase tracking-widest">cUSD</span>
           </button>
         ))}
+      </div>
+
+      <div className="w-full max-w-sm mb-12 relative">
+        <input 
+          type="number"
+          min="1"
+          step="0.1"
+          placeholder="Custom Amount"
+          value={WAGER_OPTIONS.includes(selectedWager) ? '' : selectedWager}
+          onChange={(e) => setSelectedWager(e.target.value)}
+          className={`w-full py-4 px-6 rounded-xl border-2 bg-surface-container font-display font-bold text-xl outline-none transition-all placeholder:text-on-surface-variant/50 ${
+            !WAGER_OPTIONS.includes(selectedWager) && selectedWager !== ''
+              ? 'border-primary text-primary neon-border-glow scale-[1.02]'
+              : 'border-outline-variant text-on-surface hover:border-primary/50'
+          }`}
+        />
+        <span className="absolute right-6 top-1/2 -translate-y-1/2 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">cUSD</span>
       </div>
 
       {/* Find Match Button / Searching State */}
