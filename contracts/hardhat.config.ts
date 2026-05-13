@@ -1,16 +1,19 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
 
-// Placeholder for private keys
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "0000000000000000000000000000000000000000000000000000000000000000";
+dotenv.config();
+
+// Placeholder for private keys (a valid non-zero dummy key)
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "0000000000000000000000000000000000000000000000000000000000000001";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
   networks: {
-    alfajores: {
-      url: "https://alfajores-forno.celo-testnet.org",
+    celoSepolia: {
+      url: "https://forno.celo-sepolia.celo-testnet.org",
       accounts: [PRIVATE_KEY],
-      chainId: 44787,
+      chainId: 11142220,
     },
     celo: {
       url: "https://forno.celo.org",
