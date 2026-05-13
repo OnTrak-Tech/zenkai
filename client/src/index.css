@@ -9,9 +9,19 @@
       linear-gradient(90deg, rgba(255, 45, 120, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
   }
+
+  @keyframes loading {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+  }
 }
 
 @layer components {
+  .neon-text-glow {
+    @apply drop-shadow-[0_0_12px_currentColor];
+  }
+
   .neon-glow-text {
     @apply drop-shadow-[0_0_8px_currentColor];
   }
