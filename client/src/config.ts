@@ -18,6 +18,6 @@ export const CONTRACT_ADDRESSES = {
 export const CONFIG = {
   // Use 'celoSepolia' for testnet, 'celo' for mainnet
   network: (import.meta.env.VITE_NETWORK || 'celoSepolia') as 'celoSepolia' | 'celo',
-  serverUrl: import.meta.env.VITE_SERVER_URL || 'http://localhost:3001',
+  serverUrl: import.meta.env.VITE_SERVER_URL || 'https://server-production-716b.up.railway.app',
   walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '',
 };

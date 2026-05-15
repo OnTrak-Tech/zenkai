@@ -3,6 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { matchmakerRouter } from './matchmaker';
+import { triviaRouter } from './triviaGame';
 import { setupWebSocketServer } from './gameServer';
 
 const app = express();
@@ -21,6 +22,9 @@ app.get('/health', (req, res) => {
 
 // Attach Matchmaker API
 app.use('/api', matchmakerRouter);
+
+// Attach Trivia Game API
+app.use('/api/trivia', triviaRouter);
 
 // Create HTTP server
 const server = createServer(app);
