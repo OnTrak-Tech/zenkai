@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getRandomQuestions, TriviaQuestion } from '../data/triviaQuestions';
+import { getRandomQuestions } from '../data/triviaQuestions';
+import type { TriviaQuestion } from '../data/triviaQuestions';
 
 type GamePhase = 'countdown' | 'playing' | 'encrypting' | 'results';
 
