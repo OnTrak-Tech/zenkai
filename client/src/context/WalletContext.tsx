@@ -4,12 +4,11 @@ import {
   createWalletClient, 
   custom, 
   http, 
-  parseAbi, 
   formatEther,
   type Address
 } from 'viem';
 import { celo, celoSepolia } from 'viem/chains';
-import { CONFIG, CONTRACT_ADDRESSES } from '../config';
+import { CONFIG } from '../config';
 
 interface WalletContextType {
   address: Address | null;
@@ -24,15 +23,6 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const CUSD_ABI = [
-  {
-    name: 'balanceOf',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ type: 'address', name: 'account' }],
-    outputs: [{ type: 'uint256' }],
-  },
-] as const;
 
 export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState<Address | null>(null);
@@ -41,7 +31,6 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   const chain = CONFIG.network === 'celo' ? celo : celoSepolia;
-  const cUSDAddress = CONTRACT_ADDRESSES[CONFIG.network].cUSD as Address;
 
   const publicClient = createPublicClient({
     chain,
@@ -61,13 +50,8 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const refreshBalance = async () => {
     if (!address) return;
     try {
-      const balanceData = await publicClient.readContract({
-        address: cUSDAddress,
-        abi: CUSD_ABI,
-        functionName: 'balanceOf',
-        args: [address]
-      } as any);
-      setBalance(Number(formatEther(balanceData as bigint)).toFixed(2));
+      const balanceData = await publicClient.getBalance({ address });
+      setBalance(Number(formatEther(balanceData)).toFixed(2));
     } catch (error) {
       console.error("Error refreshing balance:", error);
     }
