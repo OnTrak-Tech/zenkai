@@ -1,35 +1,68 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getRandomQuestions } from '../data/triviaQuestions';
-import type { TriviaQuestion } from '../data/triviaQuestions';
+import { useWallet } from '../context/WalletContext';
+import { startTrivia, submitAnswer, finishTrivia, getTriviaStatus } from '../services/apiClient';
 
-type GamePhase = 'countdown' | 'playing' | 'encrypting' | 'results';
+type GamePhase = 'loading' | 'countdown' | 'playing' | 'encrypting' | 'waiting' | 'results';
 
-const QUESTIONS_PER_GAME = 10;
+interface ClientQuestion {
+  id: number;
+  question: string;
+  options: [string, string, string, string];
+}
+
 const SECONDS_PER_QUESTION = 15;
 
 const Arena: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { address } = useWallet();
+  const matchId = (location.state as any)?.matchId || '';
   const wager = (location.state as any)?.wager || '1';
 
   // Game state
-  const [phase, setPhase] = useState<GamePhase>('countdown');
+  const [phase, setPhase] = useState<GamePhase>('loading');
   const [countdownValue, setCountdownValue] = useState(3);
-  const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
+  const [questions, setQuestions] = useState<ClientQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answerState, setAnswerState] = useState<'idle' | 'correct' | 'wrong'>('idle');
+  const [revealedCorrectIndex, setRevealedCorrectIndex] = useState<number | null>(null);
   const [opponentScore, setOpponentScore] = useState(0);
+  const [outcome, setOutcome] = useState<'WIN' | 'LOSS' | 'DRAW'>('DRAW');
+  const [error, setError] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load questions on mount
+  // --- Phase 0: Load questions from server ---
   useEffect(() => {
-    setQuestions(getRandomQuestions(QUESTIONS_PER_GAME));
-  }, []);
+    if (!matchId || !address) {
+      setError('Missing match data. Returning to lobby...');
+      setTimeout(() => navigate('/lobby'), 2000);
+      return;
+    }
+
+    const loadGame = async () => {
+      try {
+        const result = await startTrivia(matchId, address, wager);
+        setQuestions(result.questions);
+        setPhase('countdown');
+      } catch (err) {
+        console.error('Failed to start trivia:', err);
+        setError('Failed to connect to game server.');
+      }
+    };
+
+    loadGame();
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [matchId, address]);
 
   // --- Countdown Phase ---
   useEffect(() => {
@@ -51,8 +84,8 @@ const Arena: React.FC = () => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // Time's up — auto-skip
           clearInterval(timerRef.current!);
+          // Time's up — skip (don't submit to server, counted as wrong)
           advanceQuestion();
           return SECONDS_PER_QUESTION;
         }
@@ -67,36 +100,84 @@ const Arena: React.FC = () => {
 
   // --- Advance to next question or end game ---
   const advanceQuestion = useCallback(() => {
-    if (currentIndex >= QUESTIONS_PER_GAME - 1) {
-      // End of game
+    if (currentIndex >= questions.length - 1) {
+      // End of game — tell server we're done
       if (timerRef.current) clearInterval(timerRef.current);
       setPhase('encrypting');
-      // Simulate ZK-proof + opponent score generation
-      setTimeout(() => {
-        // Simulated opponent: gets 40-80% correct
-        const simulated = Math.floor(Math.random() * 5) + 4; // 4-8 out of 10
-        setOpponentScore(simulated);
-        setPhase('results');
-      }, 4000);
+
+      const finish = async () => {
+        try {
+          if (address) {
+            const result = await finishTrivia(matchId, address);
+            if (result.status === 'complete') {
+              // Both done — get final results
+              const status = await getTriviaStatus(matchId, address);
+              setOpponentScore(status.opponentScore || 0);
+              setOutcome(status.outcome || 'DRAW');
+              setPhase('results');
+            } else {
+              // Wait for opponent
+              setPhase('waiting');
+              startPollingForResults();
+            }
+          }
+        } catch (err) {
+          console.error('Finish error:', err);
+          // Fallback: still show results
+          setPhase('results');
+        }
+      };
+
+      // Show encrypting overlay for at least 2 seconds
+      setTimeout(finish, 2000);
     } else {
       setCurrentIndex((i) => i + 1);
       setSelectedAnswer(null);
       setAnswerState('idle');
+      setRevealedCorrectIndex(null);
     }
-  }, [currentIndex]);
+  }, [currentIndex, questions.length, matchId, address]);
+
+  // --- Poll for opponent to finish ---
+  const startPollingForResults = useCallback(() => {
+    if (!address) return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const status = await getTriviaStatus(matchId, address);
+        if (status.status === 'complete') {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setOpponentScore(status.opponentScore || 0);
+          setOutcome(status.outcome || 'DRAW');
+          setPhase('results');
+        }
+      } catch (err) {
+        console.error('Status poll error:', err);
+      }
+    }, 2000);
+  }, [matchId, address]);
 
   // --- Handle answer selection ---
-  const handleAnswer = (index: number) => {
-    if (answerState !== 'idle' || phase !== 'playing') return;
+  const handleAnswer = async (index: number) => {
+    if (answerState !== 'idle' || phase !== 'playing' || !address) return;
 
     if (timerRef.current) clearInterval(timerRef.current);
     setSelectedAnswer(index);
 
-    const isCorrect = index === questions[currentIndex].correctIndex;
-    if (isCorrect) {
-      setScore((s) => s + 1);
-      setAnswerState('correct');
-    } else {
+    try {
+      // Submit to server — server tells us if correct and reveals the answer
+      const result = await submitAnswer(matchId, address, currentIndex, index);
+
+      setRevealedCorrectIndex(result.correctIndex);
+      if (result.isCorrect) {
+        setScore(result.currentScore);
+        setAnswerState('correct');
+      } else {
+        setScore(result.currentScore);
+        setAnswerState('wrong');
+      }
+    } catch (err) {
+      console.error('Answer submit error:', err);
+      // Fallback: treat as wrong
       setAnswerState('wrong');
     }
 
@@ -107,11 +188,28 @@ const Arena: React.FC = () => {
   };
 
   const currentQuestion = questions[currentIndex];
-  const outcome = score > opponentScore ? 'WIN' : score < opponentScore ? 'LOSS' : 'DRAW';
 
   // --- RENDER ---
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] overflow-hidden relative bg-background">
+
+      {/* ========== ERROR STATE ========== */}
+      {error && (
+        <div className="absolute inset-0 z-50 bg-background flex flex-col items-center justify-center p-6">
+          <span className="material-symbols-outlined text-error text-5xl mb-4">error</span>
+          <p className="font-headline font-bold text-error text-center">{error}</p>
+        </div>
+      )}
+
+      {/* ========== LOADING PHASE ========== */}
+      {phase === 'loading' && !error && (
+        <div className="absolute inset-0 z-50 bg-background flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest">
+            Connecting to Game Server...
+          </p>
+        </div>
+      )}
 
       {/* ========== COUNTDOWN PHASE ========== */}
       {phase === 'countdown' && (
@@ -128,7 +226,7 @@ const Arena: React.FC = () => {
             )}
           </div>
           <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest mt-8">
-            {QUESTIONS_PER_GAME} Questions • {SECONDS_PER_QUESTION}s Each • {wager} cUSD
+            {questions.length} Questions • {SECONDS_PER_QUESTION}s Each • {wager} cUSD
           </p>
         </div>
       )}
@@ -138,19 +236,39 @@ const Arena: React.FC = () => {
         <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center p-6">
           <div className="w-full max-w-xs space-y-6">
             <h2 className="text-center font-display font-black text-2xl text-primary uppercase tracking-widest animate-pulse">
-              ENCRYPTING RESULTS
+              VERIFYING RESULTS
             </h2>
             <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
               <div className="h-full bg-primary animate-[loading_4s_ease-in-out_forwards]"></div>
             </div>
             <p className="text-center font-label text-xs text-on-surface-variant uppercase tracking-widest">
-              Generating ZK-Proof...
+              Submitting to Game Server...
             </p>
             <div className="flex justify-between font-headline text-sm text-on-surface-variant">
-              <span>Your Score: <span className="text-secondary font-bold">{score}/{QUESTIONS_PER_GAME}</span></span>
+              <span>Your Score: <span className="text-secondary font-bold">{score}/{questions.length}</span></span>
               <span>Verifying...</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========== WAITING FOR OPPONENT PHASE ========== */}
+      {phase === 'waiting' && (
+        <div className="absolute inset-0 z-50 bg-background flex flex-col items-center justify-center p-6">
+          <div className="relative w-20 h-20 mb-6">
+            <div className="absolute inset-0 border-2 border-secondary rounded-full animate-ping opacity-75"></div>
+            <div className="absolute inset-3 border-2 border-secondary rounded-full animate-ping opacity-50"></div>
+            <div className="absolute inset-6 bg-secondary rounded-full animate-pulse shadow-[0_0_15px_rgba(45,255,180,0.8)]"></div>
+          </div>
+          <h2 className="font-display font-bold text-xl text-on-surface uppercase tracking-widest mb-2">
+            WAITING FOR OPPONENT
+          </h2>
+          <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest mb-2">
+            You scored <span className="text-secondary font-bold">{score}/{questions.length}</span>
+          </p>
+          <p className="font-label text-[10px] text-on-surface-variant/50 uppercase tracking-widest">
+            Opponent is still answering...
+          </p>
         </div>
       )}
 
@@ -204,7 +322,7 @@ const Arena: React.FC = () => {
             {/* Progress */}
             <div className="flex justify-between items-center">
               <span className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">
-                Question {currentIndex + 1}/{QUESTIONS_PER_GAME}
+                Question {currentIndex + 1}/{questions.length}
               </span>
               <span className="font-headline font-bold text-sm text-secondary">
                 Score: {score}
@@ -247,7 +365,7 @@ const Arena: React.FC = () => {
                 let btnClass = 'bg-surface-container border-outline-variant/50 text-on-surface hover:border-secondary/50 active:scale-[0.98]';
 
                 if (answerState !== 'idle') {
-                  if (i === currentQuestion.correctIndex) {
+                  if (revealedCorrectIndex !== null && i === revealedCorrectIndex) {
                     btnClass = 'bg-secondary/20 border-secondary text-secondary shadow-[0_0_15px_rgba(45,255,180,0.3)]';
                   } else if (i === selectedAnswer && answerState === 'wrong') {
                     btnClass = 'bg-error/20 border-error text-error shadow-[0_0_15px_rgba(255,45,45,0.3)] animate-[shake_0.3s_ease-in-out]';

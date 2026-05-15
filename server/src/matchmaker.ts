@@ -9,12 +9,13 @@ type QueueEntry = {
     address: string;
     gameType: GameType;
     stakeTier: STAKE_TIER;
+    wagerAmount: string;
     timestamp: number;
 };
 
 // Queue state
 const waitingQueue: QueueEntry[] = [];
-const activeMatches: Map<string, { matchId: string; p1: string; p2: string }> = new Map();
+const activeMatches: Map<string, { matchId: string; p1: string; p2: string; wagerAmount: string }> = new Map();
 
 // For testing
 export function resetMatchmaker() {
@@ -26,16 +27,16 @@ export function resetMatchmaker() {
 function findMatch(entry: QueueEntry): QueueEntry | undefined {
     return waitingQueue.find(
         (q) => q.gameType === entry.gameType && 
-               q.stakeTier === entry.stakeTier && 
+               q.wagerAmount === entry.wagerAmount && 
                q.address !== entry.address
     );
 }
 
 // 1. POST /queue - Enqueue player
 matchmakerRouter.post('/queue', (req: Request, res: Response) => {
-    const { address, gameType, stakeTier } = req.body;
+    const { address, gameType, stakeTier, wagerAmount } = req.body;
 
-    if (!address || !gameType || !stakeTier) {
+    if (!address || !gameType) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -43,14 +44,15 @@ matchmakerRouter.post('/queue', (req: Request, res: Response) => {
     const existingIdx = waitingQueue.findIndex(q => q.address === address);
     if (existingIdx !== -1) {
         // Just return their existing queueId
-        return res.json({ queueId: waitingQueue[existingIdx].queueId });
+        return res.json({ queueId: waitingQueue[existingIdx].queueId, status: "waiting" });
     }
 
     const entry: QueueEntry = {
         queueId: crypto.randomUUID(),
         address,
         gameType,
-        stakeTier,
+        stakeTier: stakeTier || "Standard",
+        wagerAmount: wagerAmount || "1",
         timestamp: Date.now()
     };
 
@@ -64,10 +66,11 @@ matchmakerRouter.post('/queue', (req: Request, res: Response) => {
         waitingQueue.splice(waitingQueue.indexOf(opponent), 1);
         
         // Save active match state for both
-        activeMatches.set(entry.queueId, { matchId, p1: opponent.address, p2: entry.address });
-        activeMatches.set(opponent.queueId, { matchId, p1: opponent.address, p2: entry.address });
+        const matchData = { matchId, p1: opponent.address, p2: entry.address, wagerAmount: entry.wagerAmount };
+        activeMatches.set(entry.queueId, matchData);
+        activeMatches.set(opponent.queueId, matchData);
         
-        return res.json({ queueId: entry.queueId, status: "matched", matchId });
+        return res.json({ queueId: entry.queueId, status: "matched", matchId, opponent: opponent.address });
     }
 
     // No opponent found, add to queue
