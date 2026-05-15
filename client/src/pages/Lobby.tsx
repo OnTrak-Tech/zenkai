@@ -21,7 +21,7 @@ const Lobby: React.FC = () => {
     setIsSearching(true);
     // Simulate finding a match
     setTimeout(() => {
-      navigate('/arena');
+      navigate('/arena', { state: { wager: selectedWager } });
     }, 3000);
   };
 
