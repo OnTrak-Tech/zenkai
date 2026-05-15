@@ -131,7 +131,7 @@ const Lobby: React.FC = () => {
               : 'border-outline-variant text-on-surface hover:border-primary/50'
           } ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
         />
-        <span className="absolute right-6 top-1/2 -translate-y-1/2 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">cUSD</span>
+        <span className="absolute right-6 top-1/2 -translate-y-1/2 font-label text-[10px] uppercase tracking-widest text-on-surface-variant">CELO</span>
       </div>
 
       {/* Find Match Button / Searching State */}
@@ -167,7 +167,7 @@ const Lobby: React.FC = () => {
       <div className="mt-8 text-center flex flex-col items-center gap-1">
          <span className="text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Available Balance</span>
          <span className="font-headline font-bold text-lg text-secondary neon-cyan-glow">
-            {balance} cUSD
+            {balance} CELO
          </span>
       </div>
 

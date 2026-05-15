@@ -226,7 +226,7 @@ const Arena: React.FC = () => {
             )}
           </div>
           <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest mt-8">
-            {questions.length} Questions • {SECONDS_PER_QUESTION}s Each • {wager} cUSD
+            {questions.length} Questions • {SECONDS_PER_QUESTION}s Each • {wager} CELO
           </p>
         </div>
       )}
@@ -302,7 +302,7 @@ const Arena: React.FC = () => {
             outcome === 'LOSS' ? 'text-error' :
             'text-tertiary'
           }`}>
-            {outcome === 'WIN' ? `+${wager}` : outcome === 'LOSS' ? `-${wager}` : '±0'} cUSD
+            {outcome === 'WIN' ? `+${wager}` : outcome === 'LOSS' ? `-${wager}` : '±0'} CELO
           </div>
 
           <button
@@ -394,7 +394,7 @@ const Arena: React.FC = () => {
           {/* Bottom: Wager reminder */}
           <div className="px-4 py-3 border-t border-outline-variant/20 bg-surface-container-low flex justify-between items-center">
             <span className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Wager</span>
-            <span className="font-headline font-bold text-sm text-primary neon-text-glow">{wager} cUSD</span>
+            <span className="font-headline font-bold text-sm text-primary neon-text-glow">{wager} CELO</span>
           </div>
         </>
       )}
